@@ -1,3 +1,4 @@
+from re import L
 from unicodedata import category
 from bs4 import BeautifulSoup
 import pandas as pd
@@ -185,6 +186,7 @@ def df_modifier(df, file_category):
 
     del_av_bin_neg(df, file_category)
     column_eraser(df, file_category)
+    column_replacer(df, 'M/LWD Tool Size', '6 Â¾" and smaller', '6 ¾" and smaller')
     
 def column_eraser(df, file_category):
     # Deletes columns that are considered useless for either reports.
@@ -215,5 +217,7 @@ def del_av_bin_neg(df, file_category):
         filt = df['Band (G)'].str.contains('-', na=False)
         df.loc[filt, 'Measure Type'] = 'Delta Average Bins (-)'
 
+def column_replacer(df, colmn, old_content, new_content):
 
-    
+    filter = (df[colmn] == old_content)
+    df.loc[filter, colmn] = new_content

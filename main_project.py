@@ -61,7 +61,7 @@ for k, v in reports_dic.items():
         continue
     # print(k)
     # print(v)
-    temp_df = v.groupby(['Vibration Tool', 'M/LWD Tool Size', 'Measure Type', 'Band (G)'])['Bit Run (Mins)'].sum().rename('Acumulado').reset_index()
+    temp_df = v.groupby(['Job Number', 'Vibration Tool', 'M/LWD Tool Size', 'Measure Type', 'Band (G)'])['Bit Run (Mins)'].sum().rename('Acumulado').reset_index()
     print(temp_df)
     df_name = f'{k}.xlsx'
     with pd.ExcelWriter(f'{folder_path}/output/{df_name}') as writer:
