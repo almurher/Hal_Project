@@ -60,9 +60,8 @@ for k, v in reports_dic.items():
     if len(v.columns) == 0:
         continue
     # print(k)
-    # print(v)
+    print(v)
     temp_df = v.groupby(['Job Number', 'Vibration Tool', 'M/LWD Tool Size', 'Measure Type', 'Band (G)'])['Bit Run (Mins)'].sum().rename('Acumulado').reset_index()
-    print(temp_df)
     df_name = f'{k}.xlsx'
     with pd.ExcelWriter(f'{folder_path}/output/{df_name}') as writer:
-        temp_df.to_excel(writer, index=False, header=True)
+        v.to_excel(writer, index=False, header=True)

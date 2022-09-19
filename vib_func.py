@@ -101,7 +101,10 @@ def data_helper(well_df, vols_df):
 '''CREATING DATAFRAMES'''
 
 def row_merger(df_lst):
+
+    # Note: Not used anymore due to changes in the design of the final dataframe.
     # Help to merge rows
+    
     new_df_lst = []
     peak_df_merged = {}
 
@@ -127,6 +130,19 @@ def row_merger(df_lst):
 
     return new_df_lst
 
+def peak_name_fix(df):
+    
+    # Adds the type of measure done in Peak Bins to measure type, (Mins) or (Events).
+ 
+    bit_run_units = ['(Mins)', '(Events)', '(count)']
+    for word in bit_run_units:
+        if word in df.columns[2]:
+            
+            if word == '(count)' or word == '(Events)':
+                word = '(Events)'
+            filt = df['Measure Type'].str.contains('Peak', na=False)
+            df.loc[filt, 'Measure Type'] = df['Measure Type'] + ' ' + word
+
 def vib_val_df(vib_val_list):
     # Function that returns a dataframe from the list of lists from vol_summary_extr
     # merged with other data like job number, run, sensor and even tool size for average bins.
@@ -142,11 +158,10 @@ def vib_val_df(vib_val_list):
         v_df = pd.DataFrame(v_lst[1], columns = header)
         v_df.insert(0, "Measure Type", v_lst[0])
         v_df.iloc[:, 2] = [float(x) for x in v_df.iloc[:, 2]]
+        peak_name_fix(v_df)
         new_list.append(v_df)
 
-    final_list = row_merger(new_list)
-
-    return final_list
+    return new_list
 
 def info_merger_df(well_dict, vols_dict):
     # It takes both well information and the vibration operating limits summary
