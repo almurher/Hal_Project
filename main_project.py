@@ -52,7 +52,7 @@ for file in files:
     # pd.set_option("display.max_rows", 40)
 
 pd.set_option("display.max_columns", 40)
-pd.set_option("display.max_rows", 40)
+pd.set_option("display.max_rows", 200)
 
 os.makedirs(f'{folder_path}/output', exist_ok=True)
 
@@ -60,8 +60,9 @@ for k, v in reports_dic.items():
     if len(v.columns) == 0:
         continue
     # print(k)
-    print(v)
-    temp_df = v.groupby(['Job Number', 'Vibration Tool', 'M/LWD Tool Size', 'Measure Type', 'Band (G)'])['Bit Run (Mins)'].sum().rename('Acumulado').reset_index()
+    sum_df = modified_df(v)
+    temp_df = sum_data_filter(sum_df)
+    print(temp_df)
     df_name = f'{k}.xlsx'
     with pd.ExcelWriter(f'{folder_path}/output/{df_name}') as writer:
         v.to_excel(writer, index=False, header=True)

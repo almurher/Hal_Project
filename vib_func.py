@@ -104,7 +104,7 @@ def row_merger(df_lst):
 
     # Note: Not used anymore due to changes in the design of the final dataframe.
     # Help to merge rows
-    
+
     new_df_lst = []
     peak_df_merged = {}
 
@@ -236,3 +236,20 @@ def column_replacer(df, colmn, old_content, new_content):
 
     filter = (df[colmn] == old_content)
     df.loc[filter, colmn] = new_content
+
+'''SUMS'''
+
+def modified_df(basic_df):
+
+    # The function merges the different Bands and Bit Run columns into a single one for each case.
+    df = basic_df.copy()
+    df['Band'] = df['Band (G)'].combine_first(df['Band (%)'])
+    df['Bit Run'] = df['Bit Run (Mins)'].combine_first(df['Bit Run (count)'])
+    df.drop(['Band (G)', 'Band (%)', 'Bit Run (Mins)', 'Bit Run (count)'], axis=1, inplace=True)
+
+    return df
+
+def sum_data_filter(df):
+    # Filters columns for a specific set of values and returns a new column with sums.
+    new_df = df.groupby(['Job Number', 'Vibration Tool', 'M/LWD Tool Size', 'Measure Type', 'Band'])['Bit Run'].apply(sum).rename('Bit Run (sum)')
+    return new_df
