@@ -251,5 +251,5 @@ def modified_df(basic_df):
 
 def sum_data_filter(df):
     # Filters columns for a specific set of values and returns a new column with sums.
-    new_df = df.groupby(['Job Number', 'Vibration Tool', 'M/LWD Tool Size', 'Measure Type', 'Band'])['Bit Run'].apply(sum).rename('Bit Run (sum)')
+    new_df = df.groupby(['Job Number', 'Vibration Tool', 'M/LWD Tool Size', 'Measure Type', 'Band'])['Bit Run'].apply(sum).rename('Bit Run (sum)').reset_index()
     return new_df

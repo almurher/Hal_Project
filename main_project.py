@@ -65,4 +65,4 @@ for k, v in reports_dic.items():
     print(temp_df)
     df_name = f'{k}.xlsx'
     with pd.ExcelWriter(f'{folder_path}/output/{df_name}') as writer:
-        v.to_excel(writer, index=False, header=True)
+        temp_df.to_excel(writer, index=False, header=True)
