@@ -6,9 +6,6 @@ from multiprocessing.util import info
 from vib_func import *
 from file_manager import *
 
-# Este es el principio pero por mañoso se deja al final. Requiere condicionales
-# para verificar que el archivo adecuado entre...
-
 # This dictionary stores the final dataframes for each correspinding
 # report. 
 report_catgs = report_types()
@@ -37,32 +34,25 @@ for file in files:
     values_df_dict = vib_val_df(values_dct)
     raw_df = final_merger_df(well_info, vols_info, values_df_dict)
 
-
-    # filt = (raw_df["Measure Type"] == 'Peak Z Bins')
-    # print(raw_df.loc[filt])
-    # print(raw_df.groupby(['Measure Type', 'Band (G)'])['Bit Run (Mins)', 'Bit Run (count)'].sum())
-    # file_name = str(soup.h1)
-
     df_modifier(raw_df, file_categ)
    
     reports_dic[file_categ] = pd.concat([reports_dic[file_categ],raw_df], ignore_index=True)
-    #print(end_df.groupby(['Job Number', 'Vibration Tool', 'M/LWD Tool Size', 'Measure Type', 'Band (G)'])['Bit Run (Mins)'].sum())
     print(f'¡El archivo {file} se ha analizado exitosamente!')
-    # pd.set_option("display.max_columns", 40)
-    # pd.set_option("display.max_rows", 40)
 
 pd.set_option("display.max_columns", 40)
 pd.set_option("display.max_rows", 200)
 
 os.makedirs(f'{folder_path}/output', exist_ok=True)
 
-for k, v in reports_dic.items():
-    if len(v.columns) == 0:
+for df_key, df_value in reports_dic.items():
+    if len(df_value.columns) == 0:
         continue
-    # print(k)
-    sum_df = modified_df(v)
-    temp_df = sum_data_filter(sum_df)
-    print(temp_df)
-    df_name = f'{k}.xlsx'
-    with pd.ExcelWriter(f'{folder_path}/output/{df_name}') as writer:
-        temp_df.to_excel(writer, index=False, header=True)
+    
+    # Generates a modified dataframe and calculates values for it.
+    temp_df = df_adapter(df_value)
+    sum_df = sum_data_filter(temp_df)
+    print(sum_df)
+    
+    # Exports to excel files either raw and calculated sums dataframe. 
+    export_xls(df_value, f'{df_key} - final', folder_path)
+    export_xls(sum_df.reset_index(), f'{df_key} - accumulated', folder_path)

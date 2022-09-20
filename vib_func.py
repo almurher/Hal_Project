@@ -239,7 +239,7 @@ def column_replacer(df, colmn, old_content, new_content):
 
 '''SUMS'''
 
-def modified_df(basic_df):
+def df_adapter(basic_df):
 
     # The function merges the different Bands and Bit Run columns into a single one for each case.
     df = basic_df.copy()
@@ -251,5 +251,13 @@ def modified_df(basic_df):
 
 def sum_data_filter(df):
     # Filters columns for a specific set of values and returns a new column with sums.
-    new_df = df.groupby(['Job Number', 'Vibration Tool', 'M/LWD Tool Size', 'Measure Type', 'Band'])['Bit Run'].apply(sum).rename('Bit Run (sum)').reset_index()
+    new_df = df.groupby(['Job Number', 'Vibration Tool', 'M/LWD Tool Size', 'Measure Type', 'Band'])['Bit Run'].apply(sum).rename('Bit Run (sum)')
     return new_df
+
+'''Export Data'''
+
+def export_xls(df, file_name, output_path):
+
+    df_name = f'{file_name}.xlsx'
+    with pd.ExcelWriter(f'{output_path}/output/{df_name}') as writer:
+        df.to_excel(writer, index=False, header=True)
