@@ -3,7 +3,8 @@ from unicodedata import category
 from bs4 import BeautifulSoup
 import pandas as pd
 from typing import final
-
+import numpy as np
+import math
 
 '''DATA EXTRACTION'''
 
@@ -82,22 +83,6 @@ def vol_summary_extr(soup_file, file_category_ind):
 
     return value_lst
 
-def data_helper(well_df, vols_df):
-    # Note: It's not used anymore.
-    # Helper function for vib_val_df(), returns a dictionary with the needed information from the
-    # the well and the vibration operating limit summary.
-
-    info_needed = ["Well Name", "Job Number", "Run Number selected", "Vibration Tool", "M/LWD Tool Size"]
-    new_dct = {}
-
-    for info in info_needed:
-        if info in well_df.columns:
-            new_dct[info] = well_df.loc[0, info]
-        elif info in vols_df.columns:
-            new_dct[info] = vols_df.loc[0, info]
-
-    return new_dct
-
 '''CREATING DATAFRAMES'''
 
 def row_merger(df_lst):
@@ -136,6 +121,7 @@ def peak_name_fix(df):
  
     bit_run_units = ['(Mins)', '(Events)', '(count)']
     for word in bit_run_units:
+
         if word in df.columns[2]:
             
             if word == '(count)' or word == '(Events)':
@@ -194,14 +180,16 @@ def final_merger_df(well_dict, vols_dict, vib_val_dict_df):
 
 '''DATA CLEANING'''
 
-def df_modifier(df, file_category):
+def df_modifier(df, file_category, file_name):
     
     # This function integers different functions related to modify the final
     # dataframe. it's only purpose is give more order to the script.
-
+    tool_name = na_vib_tool_finder(df, file_name)
     del_av_bin_neg(df, file_category)
     column_eraser(df, file_category)
     column_replacer(df, 'M/LWD Tool Size', '6 Â¾" and smaller', '6 ¾" and smaller')
+    column_replacer(df, 'Vibration Tool', 'N/A', tool_name)
+    df.replace('None', np.nan, inplace=True)
     
 def column_eraser(df, file_category):
     # Deletes columns that are considered useless for either reports.
@@ -237,7 +225,18 @@ def column_replacer(df, colmn, old_content, new_content):
     filter = (df[colmn] == old_content)
     df.loc[filter, colmn] = new_content
 
-'''SUMS'''
+def na_vib_tool_finder(df, file_name):
+    # Finds and returns the tool name from the file name in case it isn't available in the report.
+    end_index = file_name.find('-')
+    string_lst = file_name[:end_index].split()
+    start_index = 0
+    for i in range(len(string_lst)):
+        if string_lst[i] == 'VLA':
+            start_index = i
+
+    return '-'.join(string_lst[start_index + 1:])
+
+'''ACCUMULATIVE FILTERS'''
 
 def df_adapter(basic_df):
 
@@ -247,17 +246,47 @@ def df_adapter(basic_df):
     df['Bit Run'] = df['Bit Run (Mins)'].combine_first(df['Bit Run (count)'])
     df.drop(['Band (G)', 'Band (%)', 'Bit Run (Mins)', 'Bit Run (count)'], axis=1, inplace=True)
 
+    if 'Op Limit (Events)' in df.columns and 'Op Limit (Mins)' in df.columns:
+        df['Op Limit'] = df['Op Limit (Mins)'].combine_first(df['Op Limit (Events)'])
+        df.drop(['Op Limit (Mins)', 'Op Limit (Events)'], axis=1, inplace=True)
+        df['Op Limit'] = df['Op Limit'].astype('float32')
+
+    elif 'Op Limit (Mins)' in df.columns:
+        df['Op Limit'] = df['Op Limit (Mins)']
+        df.drop(['Op Limit (Mins)'], axis=1, inplace=True)
+        df['Op Limit'] = df['Op Limit'].astype('float32')
+
     return df
 
 def sum_data_filter(df):
     # Filters columns for a specific set of values and returns a new column with sums.
-    new_df = df.groupby(['Job Number', 'Vibration Tool', 'M/LWD Tool Size', 'Measure Type', 'Band'])['Bit Run'].apply(sum).rename('Bit Run (sum)')
+    
+    if 'Op Limit' in df.columns:
+        new_df = df.groupby(['Job Number', 'Vibration Tool', 'M/LWD Tool Size', 'Measure Type', 'Band']).agg(Bit_Run_Tot = ('Bit Run', 'sum'), Op_Lim = ('Op Limit', 'max')).round(2)  
+        return new_df
+    
+    new_df = df.groupby(['Job Number', 'Vibration Tool', 'M/LWD Tool Size', 'Measure Type', 'Band'])['Bit Run'].apply(sum).rename('Bit_Run_Tot').round(2)
     return new_df
 
-'''Export Data'''
+def surpass_op_lim(df):
+    # Checks out if the accumulative Bit Run is higher than the operating limits values and returns a list of lists.
+    df = df.reset_index()
+
+    if 'Op_Lim' in df.columns:
+        filt = (df['Bit_Run_Tot'] > df['Op_Lim'])
+        df_list = df[filt].values.tolist()
+
+        return df_list
+
+def available_tools(df):
+    # Returns a list of vibration tools found in the dataframe.
+    return list(df['Vibration Tool'].unique())
+
+'''DATA EXPORTING'''
 
 def export_xls(df, file_name, output_path):
-
+    # Exports dataframes to excel.
     df_name = f'{file_name}.xlsx'
     with pd.ExcelWriter(f'{output_path}/output/{df_name}') as writer:
         df.to_excel(writer, index=False, header=True)
+
