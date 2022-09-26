@@ -2,8 +2,8 @@ import os
 
 def folder_opener():
 
-    # user_folder = input("Por favor agregue la ruta de su carpeta de trabajo: ")
-    user_folder = "c:/Users/Aldairo/hal_project/data"
+    user_folder = input("Por favor agregue la ruta de su carpeta de trabajo: ")
+    # user_folder = "c:/Users/Aldairo/hal_project/data"
     
     os.chdir(user_folder)
     dir_list = os.listdir()

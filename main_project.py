@@ -55,6 +55,7 @@ for df_key, df_value in reports_dic.items():
     print(sum_gui_df)
     # Final list with rows which overcame operating limits.
     surpassed_limits_list = surpass_op_lim(sum_gui_df)
+    print(surpassed_limits_list)
     # Exports to excel files from either raw and calculated sum dataframes. 
     export_xls(df_value, f'{df_key} - final', folder_path)
     export_xls(sum_gui_df.reset_index(), f'{df_key} - accumulated', folder_path)

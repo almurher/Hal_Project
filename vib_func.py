@@ -189,6 +189,7 @@ def df_modifier(df, file_category, file_name):
     column_eraser(df, file_category)
     column_replacer(df, 'M/LWD Tool Size', '6 Â¾" and smaller', '6 ¾" and smaller')
     column_replacer(df, 'Vibration Tool', 'N/A', tool_name)
+    column_replacer(df, 'Job Number', '-XX', 'CB', beginswith=True)
     df.replace('None', np.nan, inplace=True)
     
 def column_eraser(df, file_category):
@@ -220,21 +221,34 @@ def del_av_bin_neg(df, file_category):
         filt = df['Band (G)'].str.contains('-', na=False)
         df.loc[filt, 'Measure Type'] = 'Delta Average Bins (-)'
 
-def column_replacer(df, colmn, old_content, new_content):
+def column_replacer(df, colmn, old_content, new_content, beginswith=False):
+    if beginswith:
+        filter = (df[colmn].str.startswith(old_content))
+        df.loc[filter, colmn] = df.loc[filter, colmn].str.slice_replace(0, 0, repl = new_content)
 
-    filter = (df[colmn] == old_content)
-    df.loc[filter, colmn] = new_content
+    else:
+        filter = (df[colmn] == old_content)
+        df.loc[filter, colmn] = new_content
 
 def na_vib_tool_finder(df, file_name):
     # Finds and returns the tool name from the file name in case it isn't available in the report.
-    end_index = file_name.find('-')
-    string_lst = file_name[:end_index].split()
-    start_index = 0
-    for i in range(len(string_lst)):
-        if string_lst[i] == 'VLA':
-            start_index = i
+    substring = ['PCM', 'PCDC'] # New tool's name can be added here.
+    file_name = file_name.upper()
 
-    return '-'.join(string_lst[start_index + 1:])
+    for word in substring:
+        if word in file_name:
+            return f'SVSS-{word}'
+
+    return 'N/A'
+    # Unused code:
+    # end_index = file_name.find('-')
+    # string_lst = file_name[:end_index].split()
+    # start_index = 0
+    # for i in range(len(string_lst)):
+    #     if string_lst[i] == 'VLA':
+    #         start_index = i
+
+    # return '-'.join(string_lst[start_index + 1:])
 
 '''ACCUMULATIVE FILTERS'''
 
@@ -274,7 +288,7 @@ def surpass_op_lim(df):
 
     if 'Op_Lim' in df.columns:
         filt = (df['Bit_Run_Tot'] > df['Op_Lim'])
-        df_list = df[filt].values.tolist()
+        df_list = df[filt] #.values.tolist()
 
         return df_list
 
