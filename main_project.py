@@ -57,8 +57,8 @@ for df_key, df_value in reports_dic.items():
     surpassed_limits_list = surpass_op_lim(sum_gui_df)
     print(surpassed_limits_list)
     # Exports to excel files from either raw and calculated sum dataframes. 
-    export_xls(df_value, f'{df_key} - final', folder_path)
-    export_xls(sum_gui_df.reset_index(), f'{df_key} - accumulated', folder_path)
+    export_xls(df_value, f'{df_key}_final', folder_path)
+    export_xls(sum_gui_df.reset_index(), f'{df_key}_accumulated', folder_path)
     
     # Tools available
     tools = available_tools(temp_df)

@@ -194,7 +194,7 @@ def df_modifier(df, file_category, file_name):
     
 def column_eraser(df, file_category):
     # Deletes columns that are considered useless for either reports.
-    col_stnd = ['Rig Name','Activity Code', 'Report Generation Date and Time']
+    col_stnd = ['Activity Code', 'Report Generation Date and Time']
     col_stnd.extend(col_to_del(file_category))
     df.drop(columns=col_stnd, inplace=True)
 
@@ -232,10 +232,12 @@ def column_replacer(df, colmn, old_content, new_content, beginswith=False):
 
 def na_vib_tool_finder(df, file_name):
     # Finds and returns the tool name from the file name in case it isn't available in the report.
-    substring = ['PCM', 'PCDC'] # New tool's name can be added here.
+    substring = ['PCM', 'PCDC', 'BaseStar'] # New tool's name can be added here.
     file_name = file_name.upper()
 
     for word in substring:
+        if word == 'BASESTAR':
+            return 'BaseStar'
         if word in file_name:
             return f'SVSS-{word}'
 
